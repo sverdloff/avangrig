@@ -65,6 +65,27 @@ function mainApp() {
                 infowindow.open(map, wayPoints.markers[num]);
                 currentPlaceSelected = Number(num);
             });
+        },
+
+        reFillMap = function () {
+            for (let i = 0; i < wayPoints.markers.length; i++) {
+                wayPoints.markers[i].setMap(map);
+                wayPoints.markers[i].addListener('click', function () {
+                    infowindowContent.children['place-name'].textContent = wayPoints.addresses[i];
+                    infowindow.open(map, wayPoints.markers[i]);
+                    currentPlaceSelected = Number(i);
+                });
+                wayPoints.markers[i].label = {text: (i + 1).toString(), color: "white"};
+            }
+        },
+
+        delWayPoint = function (id) {
+            for (let i = 0; i < wayPoints.markers.length; i++) {
+                wayPoints.markers[i].setMap(null);
+            }
+            wayPoints.markers.splice(Number(id), 1);
+            wayPoints.addresses.splice(Number(id), 1);
+            reFillMap();
         };
 
         /** The dialog of adding a new address of way point **/
@@ -123,6 +144,40 @@ function mainApp() {
                 document.getElementsByClassName('title-name').item(0).textContent = 'Demo';
             })
         });
+
+        document.getElementById('deletewaypoint').addEventListener('click', function () {
+            if (currentPlaceSelected != -1) {
+                dataBaseAction('deletewaypointdbbyid', ['id=' + wayPoints.recId[currentPlaceSelected]]);
+                delWayPoint(currentPlaceSelected);
+                currentPlaceSelected = -1;
+                return true;
+            }
+            document.getElementsByName('item').forEach(function (elem) {
+                if (elem.hasAttribute('selected')) {
+                    let id = Number(elem.getAttribute('data-id')) - 1;
+                    dataBaseAction('deletewaypointdbbyid', ['id=' + wayPoints.recId[id]]);
+                    delWayPoint(id);
+                    elem.remove();
+                    document.getElementById('arrow-back').click();
+                }
+            });
+        });
+
+        document.getElementById('deletewaypoints').addEventListener('click', function () {
+            document.getElementById('list_container').innerHTML = '';
+            deleteWayPointsFromMap();
+            document.getElementById('arrow-back').click();
+            dataBaseAction('deleteallwaypointdb', []);
+        });
+
+        function deleteWayPointsFromMap() {
+            for (let i = 0; i < wayPoints.markers.length; i++) {
+                wayPoints.markers[i].setMap(null);
+            }
+            wayPoints.markers.length = 0;
+            wayPoints.addresses.length = 0;
+            wayPoints.recId.length = 0;
+        }
 
 
         function getPlaceByWayPoint(pointsArray) {
