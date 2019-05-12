@@ -78,6 +78,53 @@ function mainApp() {
         });
         /** end dialog */
 
+        document.getElementById('showlistpoint').addEventListener('click', function () {
+            document.getElementById('map_container').style.display = 'none';
+            document.getElementById('list_container').style.display = 'contents';
+            currentPlaceSelected = -1;
+            let itemTPL =
+                "<div name='item' data-id='NUMBER'>\n" +
+                "   <img src=\"/Public/svg/pin.png\">\n" +
+                "   <h4>NUMBER</h4>\n" +
+                "   <h5>ADDRESS</h5>\n" +
+                "</div>\n",
+                innerHTML = '',
+                count = wayPoints.markers.length;
+
+            for (let i = 0; i < count; i++) {
+                tmpStr = String(itemTPL);
+                tmpStr = tmpStr.replace(/NUMBER/g, i + 1);
+                tmpStr = tmpStr.replace('ADDRESS', wayPoints.addresses[i]);
+                innerHTML += tmpStr;
+            }
+            let newDiv = document.createElement('div');
+            newDiv.innerHTML = innerHTML;
+            document.getElementById('list_container').innerHTML = '';
+            document.getElementById('list_container').appendChild(newDiv);
+            document.getElementsByName('item').forEach(function (elem) {
+                elem.addEventListener('click', function () {
+                    if (this.hasAttribute('selected')) {
+                        this.toggleAttribute('selected', false);
+                    } else {
+                        document.getElementsByName('item').forEach(function (el) {
+                            el.toggleAttribute('selected', false);
+                        });
+                        this.toggleAttribute('selected', true);
+                    }
+                });
+            });
+            document.getElementsByClassName('title-name').item(0).textContent = 'Waypoints list';
+            document.getElementById('arrow-back').style.display = 'block';
+            document.getElementById('arrow-back').addEventListener('click', function () {
+                this.style.display = 'none';
+                document.getElementById('list_container').style.display = 'none';
+                document.getElementById('map_container').style.display = 'block';
+                document.getElementById('list_container').innerHTML = '';
+                document.getElementsByClassName('title-name').item(0).textContent = 'Demo';
+            })
+        });
+
+
         function getPlaceByWayPoint(pointsArray) {
             var place = {};
             if (pointsArray.length > 0) {
