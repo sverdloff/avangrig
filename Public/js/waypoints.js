@@ -46,7 +46,22 @@ function mainApp() {
 
         infowindow.setContent(infowindowContent);
 
-        let addMarkerGeoCoder = function (place) {
+        let calcTotalTime = function (totalDistance) {
+                let totalTime = totalDistance / document.getElementById('speeddrone').value;
+                return totalTime.toFixed(2);
+            },
+
+            fillMetric = function () {
+
+                if (wayPoints.markers.length > 1) {
+                    dataBaseAction('getoptimalway', []);
+                } else {
+                    document.getElementById('totaldistance').innerText = 'Total distance: - ';
+                    document.getElementById('totaltime').innerText = 'Total time: - ';
+                }
+            },
+
+            addMarkerGeoCoder = function (place) {
                 let num = wayPoints.markers.length;
                 wayPoints.markers[num] = new google.maps.Marker({
                     position: {lat: Number(place.geometry.location.lat()), lng: Number(place.geometry.location.lng())},
@@ -89,6 +104,7 @@ function mainApp() {
                 reFillMap();
             };
 
+
         /** The dialog of adding a new address of way point **/
         document.getElementById('addwaypoint').addEventListener('click', function () {
             document.getElementById('newaddress').style.display = 'block';
@@ -105,6 +121,7 @@ function mainApp() {
             document.getElementById('addressname').value = '';
         });
         /** end dialog */
+
 
         document.getElementById('showlistpoint').addEventListener('click', function () {
             document.getElementById('map_container').style.display = 'none';
@@ -157,6 +174,7 @@ function mainApp() {
                 dataBaseAction('deletewaypointdbbyid', ['id=' + wayPoints.recId[currentPlaceSelected]]);
                 delWayPoint(currentPlaceSelected);
                 currentPlaceSelected = -1;
+                fillMetric();
                 return true;
             }
             document.getElementsByName('item').forEach(function (elem) {
@@ -165,6 +183,7 @@ function mainApp() {
                     dataBaseAction('deletewaypointdbbyid', ['id=' + wayPoints.recId[id]]);
                     delWayPoint(id);
                     elem.remove();
+                    fillMetric();
                     document.getElementById('arrow-back').click();
                 }
             });
@@ -173,6 +192,7 @@ function mainApp() {
         document.getElementById('deletewaypoints').addEventListener('click', function () {
             document.getElementById('list_container').innerHTML = '';
             deleteWayPointsFromMap();
+            fillMetric();
             document.getElementById('arrow-back').click();
             dataBaseAction('deleteallwaypointdb', []);
         });
@@ -246,6 +266,7 @@ function mainApp() {
                                     'adr=' + place.formatted_address,
                                     'placeid=' + place.place_id]);
                             map.setCenter({lat: place.geometry.location.lat(), lng: place.geometry.location.lng()});
+                            fillMetric();
                             break;
 
                         case 'getallwaypoints':
@@ -256,6 +277,7 @@ function mainApp() {
                                 placei = getPlaceByWayPoint([points[i]]);
                                 addMarkerGeoCoder(placei);
                             }
+                            fillMetric();
                             break;
 
                         case 'getpointstatistic':
@@ -263,6 +285,17 @@ function mainApp() {
                             console.log(wayPoints.markers.length, Number(response[0]['Counter']));
                             console.log('needSynchronize: ' + wayPoints.needSynchronize);
                             break;
+
+                        case 'getoptimalway':
+                           let totalDistance = response;
+                            document.getElementById('totaldistance').innerText = 'Total distance: ' +
+                                totalDistance.toFixed(2) + ' km';
+                            let totalTime = calcTotalTime(totalDistance),
+                                hours = ~~totalTime,
+                                minutes = (totalTime - hours) * 60;
+                            document.getElementById('totaltime').innerText = 'Total time: ' + hours +
+                                ' h ' + Math.round(minutes) + ' min ';
+                           break;
                     }
                 }
             };
@@ -280,5 +313,6 @@ function mainApp() {
             }
         }, 3000);
     };
+
     initMap();
 }

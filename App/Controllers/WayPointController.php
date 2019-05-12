@@ -21,6 +21,7 @@ class WayPointController extends ApplicationController
         'deletewaypointdbbyid'  => PATH_TO_MODELS . 'WayPoint' . FILE_MODEL_EXT,
         'deleteallwaypointdb'   => PATH_TO_MODELS . 'WayPoint' . FILE_MODEL_EXT,
         'getpointstatistic'     => PATH_TO_MODELS . 'WayPoint' . FILE_MODEL_EXT,
+        'getoptimalway'         => PATH_TO_MODELS . 'WayPoint' . FILE_MODEL_EXT
     ];
 
     private static $status = [
@@ -98,6 +99,14 @@ class WayPointController extends ApplicationController
                 require_once self::$routingAction['getpointstatistic'];
                 $point = new WayPoint();
                 $result = $point::getWayPointStatistic();
+                echo json_encode($result);
+                exit;
+
+            case  'getoptimalway':
+                require_once self::$baseModel;
+                require_once self::$routingAction['getoptimalway'];
+                $point = new WayPoint();
+                $result = $point::getOptimalWay();
                 echo json_encode($result);
                 exit;
         }

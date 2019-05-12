@@ -22,6 +22,32 @@ class WayPoint extends Core
     }
 
     /**
+     * @param $longitudeFrom
+     * @param $latitudeFrom
+     * @param $longitudeTo
+     * @param $latitudeTo
+     * @param int $earthRadius
+     * @return float|int
+     */
+    public static function getDistance(
+        $longitudeFrom, $latitudeFrom, $longitudeTo, $latitudeTo, $earthRadius = 6371)
+    {
+        $latFrom = deg2rad($latitudeFrom);
+        $lonFrom = deg2rad($longitudeFrom);
+        $latTo = deg2rad($latitudeTo);
+        $lonTo = deg2rad($longitudeTo);
+
+        $lonDelta = $lonTo - $lonFrom;
+        $a = pow(cos($latTo) * sin($lonDelta), 2) +
+            pow(cos($latFrom) * sin($latTo) - sin($latFrom) * cos($latTo) * cos($lonDelta), 2);
+        $b = sin($latFrom) * sin($latTo) + cos($latFrom) * cos($latTo) * cos($lonDelta);
+
+        $angle = atan2(sqrt($a), $b);
+
+        return $angle * $earthRadius;
+    }
+
+    /**
      * @param $args
      * @return bool
      */
@@ -126,5 +152,39 @@ class WayPoint extends Core
             'WHERE `IsDeleted` = 0 )';
 
         self::getDB()->query($sql);
+    }
+
+    public static function getOptimalWay ()
+    {
+        $points = self::getAllWayPoints();
+        $optimalWay = [];
+        $obj = new ArrayObject($points);
+        $copyPoints = $obj->getArrayCopy();
+
+        $optimalWay [$copyPoints[0]['Address']] = 0;
+        while (count($copyPoints) > 1) {
+            $minDistance = INF;
+            $nearestPointId = null;
+            for ($j = 1; $j < count($copyPoints); $j++) {
+                $distanceCurrentToNext = self::getDistance(
+                    $copyPoints[0]['Lng'], $copyPoints[0]['Lat'],
+                    $copyPoints[$j]['Lng'], $copyPoints[$j]['Lat']);
+                if ((float)$distanceCurrentToNext <= (float)$minDistance) {
+                    $minDistance = $distanceCurrentToNext;
+                    $nearestPointId = $j;
+                }
+            }
+            $optimalWay[$copyPoints[$nearestPointId]['Address']] = $minDistance;
+            array_shift($copyPoints);
+            array_unshift($copyPoints, $copyPoints[$nearestPointId - 1]);
+            array_splice($copyPoints, $nearestPointId, 1);
+        }
+
+        $way = 0;
+        foreach ($optimalWay as $key => $value){
+            $way += $value;
+        }
+
+        return $way;
     }
 }
