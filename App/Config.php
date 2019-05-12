@@ -27,5 +27,5 @@ class Config
      * Database password
      * @var string
      */
-    const DB_PASSWORD = '';
+    const DB_PASSWORD = '12345';
 }

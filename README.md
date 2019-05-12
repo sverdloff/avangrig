@@ -7,3 +7,5 @@ creating MVC files for App - 1h 00m.
 3) Creating MySQL database, tables and base
 SQL queries for PHP model file - 0h 50m. 
 4) Creating Index and Controller files - 0h 35m.
+5) Adding waypoint and positioning them
+correctly in the map - 1h 20m. 
