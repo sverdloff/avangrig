@@ -16,6 +16,6 @@ correctly in the map - 1h 20m.
 9) Synchronization by timeout - 0h 25m 
 10) Finding optimal distance - 0h 40m 
 
-I`d like todo:
+#I`d like todo:
 Namespace, Promises and review controllers, but time is over.
 Run dump.sql for deploy dataset.
