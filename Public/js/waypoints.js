@@ -183,9 +183,25 @@ function mainApp() {
         function getPlaceByWayPoint(pointsArray) {
             var place = {};
             if (pointsArray.length > 0) {
-                //TODO:
                 //Like in task #5: ... The geo coding should be done on the server side.
                 //Geo coding on local server from set of early added but deleted points.
+                place = {
+                    "geometry":
+                        {
+                            "location":
+                                {
+                                    "lat": function () {
+                                        return Number(pointsArray[0].Lat)
+                                    },
+                                    "lng": function () {
+                                        return Number(pointsArray[0].Lng)
+                                    },
+                                }
+                        },
+                    "formatted_address": pointsArray[0].Address,
+                    "place_id": pointsArray[0].PlaceId,
+                    "rec_id": pointsArray[0].Id
+                };
             } else {
                 // Primary geo coding possible on remote Google server, only.
                 place = autocomplete.getPlace();
