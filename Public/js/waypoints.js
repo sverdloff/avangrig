@@ -47,55 +47,62 @@ function mainApp() {
         infowindow.setContent(infowindowContent);
 
         let addMarkerGeoCoder = function (place) {
-            let num = wayPoints.markers.length;
-            wayPoints.markers[num] = new google.maps.Marker({
-                position: {lat: Number(place.geometry.location.lat()), lng: Number(place.geometry.location.lng())},
-                map: map,
-                label: {text: (num + 1).toString(), color: "white"},
-            });
-            wayPoints.markers[num].setPlace({
-                placeId: place.place_id,
-                location: {lat: Number(place.geometry.location.lat()), lng: Number(place.geometry.location.lng())}
-            });
-            wayPoints.markers[num].setVisible(true);
-            wayPoints.addresses[num] = place.formatted_address;
-            wayPoints.recId[num] = place.rec_id;
-            wayPoints.markers[num].addListener('click', function () {
-                infowindowContent.children['place-name'].textContent = wayPoints.addresses[num];
-                infowindow.open(map, wayPoints.markers[num]);
-                currentPlaceSelected = Number(num);
-            });
-        },
-
-        reFillMap = function () {
-            for (let i = 0; i < wayPoints.markers.length; i++) {
-                wayPoints.markers[i].setMap(map);
-                wayPoints.markers[i].addListener('click', function () {
-                    infowindowContent.children['place-name'].textContent = wayPoints.addresses[i];
-                    infowindow.open(map, wayPoints.markers[i]);
-                    currentPlaceSelected = Number(i);
+                let num = wayPoints.markers.length;
+                wayPoints.markers[num] = new google.maps.Marker({
+                    position: {lat: Number(place.geometry.location.lat()), lng: Number(place.geometry.location.lng())},
+                    map: map,
+                    label: {text: (num + 1).toString(), color: "white"},
                 });
-                wayPoints.markers[i].label = {text: (i + 1).toString(), color: "white"};
-            }
-        },
+                wayPoints.markers[num].setPlace({
+                    placeId: place.place_id,
+                    location: {lat: Number(place.geometry.location.lat()), lng: Number(place.geometry.location.lng())}
+                });
+                wayPoints.markers[num].setVisible(true);
+                wayPoints.addresses[num] = place.formatted_address;
+                wayPoints.recId[num] = place.rec_id;
 
-        delWayPoint = function (id) {
-            for (let i = 0; i < wayPoints.markers.length; i++) {
-                wayPoints.markers[i].setMap(null);
-            }
-            wayPoints.markers.splice(Number(id), 1);
-            wayPoints.addresses.splice(Number(id), 1);
-            reFillMap();
-        };
+                wayPoints.markers[num].addListener('click', function () {
+                    infowindowContent.children['place-name'].textContent = wayPoints.addresses[num];
+                    infowindow.open(map, wayPoints.markers[num]);
+                    currentPlaceSelected = Number(num);
+                });
+            },
+
+            reFillMap = function () {
+                for (let i = 0; i < wayPoints.markers.length; i++) {
+                    wayPoints.markers[i].setMap(map);
+                    wayPoints.markers[i].addListener('click', function () {
+                        infowindowContent.children['place-name'].textContent = wayPoints.addresses[i];
+                        infowindow.open(map, wayPoints.markers[i]);
+                        currentPlaceSelected = Number(i);
+                    });
+                    wayPoints.markers[i].label = {text: (i + 1).toString(), color: "white"};
+                }
+            },
+
+            delWayPoint = function (id) {
+                for (let i = 0; i < wayPoints.markers.length; i++) {
+                    wayPoints.markers[i].setMap(null);
+                }
+                wayPoints.markers.splice(Number(id), 1);
+                wayPoints.addresses.splice(Number(id), 1);
+                reFillMap();
+            };
 
         /** The dialog of adding a new address of way point **/
         document.getElementById('addwaypoint').addEventListener('click', function () {
             document.getElementById('newaddress').style.display = 'block';
             document.getElementById('addressname').focus();
         });
+
         document.getElementById('okaddaddress').addEventListener("click", function () {
             dataBaseAction('getwaypointbyaddress',
                 ['adr=' + document.getElementById('addressname').value]);
+        });
+
+        document.getElementById('closeaddaddress').addEventListener('click', function () {
+            document.getElementById('newaddress').style.display = 'none';
+            document.getElementById('addressname').value = '';
         });
         /** end dialog */
 
@@ -179,7 +186,6 @@ function mainApp() {
             wayPoints.recId.length = 0;
         }
 
-
         function getPlaceByWayPoint(pointsArray) {
             var place = {};
             if (pointsArray.length > 0) {
@@ -206,6 +212,7 @@ function mainApp() {
                 // Primary geo coding possible on remote Google server, only.
                 place = autocomplete.getPlace();
             }
+
             return place;
         }
 
@@ -240,11 +247,38 @@ function mainApp() {
                                     'placeid=' + place.place_id]);
                             map.setCenter({lat: place.geometry.location.lat(), lng: place.geometry.location.lng()});
                             break;
+
+                        case 'getallwaypoints':
+                            let points = response,
+                                countPoints = points.length;
+                            var placei = {};
+                            for (let i = 0; i < countPoints; i++) {
+                                placei = getPlaceByWayPoint([points[i]]);
+                                addMarkerGeoCoder(placei);
+                            }
+                            break;
+
+                        case 'getpointstatistic':
+                            wayPoints.needSynchronize = (wayPoints.markers.length !== Number(response[0]['Counter']));
+                            console.log(wayPoints.markers.length, Number(response[0]['Counter']));
+                            console.log('needSynchronize: ' + wayPoints.needSynchronize);
+                            break;
                     }
                 }
             };
             xhr.send();
         };
+
+        dataBaseAction('getallwaypoints', []);
+        setInterval(function () {
+            dataBaseAction('getpointstatistic', []);
+            if (wayPoints.needSynchronize === true) {
+                wayPoints.needSynchronize = false;
+                deleteWayPointsFromMap();
+                dataBaseAction('getallwaypoints', []);
+                wayPoints.needSynchronize = false;
+            }
+        }, 3000);
     };
     initMap();
 }

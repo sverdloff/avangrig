@@ -11,3 +11,6 @@ SQL queries for PHP model file - 0h 50m.
 correctly in the map - 1h 20m. 
 6) Implementing Waypoint list - 0h 13m.
 7) Delete marker for current and all points - 0h 20m
+8) Geo coding on local server from set of early
+ added but deleted points - 0h 08m
+9) Synchronization by timeout - 0h 25m  
